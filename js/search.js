@@ -49,7 +49,7 @@ var PhotoCommons = {
             }, args);
 
 
-            var url = 'http://commons.wikimedia.org/w/api.php',
+            var url = 'https://commons.wikimedia.org/w/api.php',
                 first = true,
                 key,
                 value;
@@ -58,13 +58,13 @@ var PhotoCommons = {
                 url += (first) ? '?' : '&';
                 first = false;
 
-                if ( value.indexOf( '!noencode!' ) === 0 && typeof value === 'string' ) {
+                if ( typeof value === 'string' && value.indexOf( '!noencode!' ) === 0 ) {
                     value = value.slice( 10 );
                 } else {
                     value = encodeURIComponent( value );
-            }
+                }
 
-            url += key + '=' + value;
+                url += encodeURIComponent( key ) + '=' + value;
             }
             return url;
         },
@@ -97,8 +97,8 @@ var PhotoCommons = {
                         $( '#wp-photocommons-loading' ).show();
                         $.getJSON( url, function( data ) {
 
-                            if ( !data.query.pageids.length ) {
-                                $( '#wp-photocommons-images' ).html( 'No images found :(' );
+                            if ( !data.query || !data.query.pageids || !data.query.pageids.length ) {
+                                $( '#wp-photocommons-images' ).text( WP_PHOTOCOMMONS.translations['No images found.'] );
                             } else {
                                 $.each( data.query.pageids, function( key, pageid ) {
                                     var img = data.query.pages[pageid],
@@ -107,10 +107,10 @@ var PhotoCommons = {
                                         pagetitle = img.title.split(':');
                                         pagetitle.shift();
                                         pagetitle = pagetitle.join(':');
-                                        $('<div class="image">').attr({
-                                            'style': "background-image:url('" + img.imageinfo[0].thumburl + "');",
-                                            'data-filename': pagetitle
-                                        }).appendTo('#wp-photocommons-images');
+                                        $('<div class="image">')
+                                            .css('background-image', 'url("' + img.imageinfo[0].thumburl + '")')
+                                            .attr('data-filename', pagetitle)
+                                            .appendTo('#wp-photocommons-images');
 
                                     }
                                 });

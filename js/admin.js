@@ -42,13 +42,6 @@
 	}
 
 	function addButtons() {
-		$('#wp-content-media-buttons').append(''.concat(
-			'<button type="button" id="photocommons-add"',
-			'class="button">',
-			'<img src="' + WP_PHOTOCOMMONS.imgButtonUrl + '"/>',
-			'Add Wikimedia Commons image</button>'
-		));
-
 		var $dialog = $('<div id="photocommons-dialog"></div>')
 			.html(''.concat(
 				'<label for="wp-photocommons-search">',
@@ -56,7 +49,10 @@
 				':</label>',
 				'<input type="search" id="wp-photocommons-search" />',
 				'<ul id="wp-photocommons-results"></ul>',
-				'<img src="' + WP_PHOTOCOMMONS.imgLoaderUrl + '" style="display:none;" id="wp-photocommons-loading" />',
+				'<p><label><input type="checkbox" id="wp-photocommons-featured" /> ',
+				msgEsc('Use as featured image instead of inserting in post content'),
+				'</label></p>',
+				'<img src="' + escHtml(WP_PHOTOCOMMONS.imgLoaderUrl) + '" style="display:none;" id="wp-photocommons-loading" alt="" />',
 				'<div id="wp-photocommons-images"></div>'
 			))
 			.appendTo('body');
@@ -80,16 +76,20 @@
 			var file = $(this).attr('data-filename'),
 				shortcode = '[photocommons file="' + file + '" width="300"] ';
 
-			// Depending on whether we are in Wysiwyg or HTML mode we
-			// do a different insert
-			if ($('#edButtonHTML').hasClass('active')) {
-				// HTML editor
-				$('#content').val( function(i,val){
+			if ($('#wp-photocommons-featured').prop('checked')) {
+				$('#photocommons-featured-file').val(file);
+				$dialog.dialog('close');
+				return;
+			}
+
+			if (window.wp && wp.media && wp.media.editor) {
+				wp.media.editor.insert(shortcode);
+			} else if (window.tinyMCE && tinyMCE.activeEditor && !tinyMCE.activeEditor.isHidden()) {
+				tinyMCE.execCommand('mceInsertContent', false, shortcode);
+			} else {
+				$('#content').val(function(i, val) {
 					return shortcode + val;
 				});
-			} else {
-				// Wysiwyg
-				tinyMCE.execCommand('mceInsertContent', false, shortcode);
 			}
 
 			$dialog.dialog('close');
