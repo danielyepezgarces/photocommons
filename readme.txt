@@ -1,11 +1,14 @@
 === PhotoCommons ===
-* Contributors: huskyr, timotijhof, dyepezg
-* Donate link: https://donate.wikimedia.org
-* Tags: photos, media, insert, embed, wikimedia, wikipedia
-* Requires at least: 6.0
-* Tested up to: 6.9
-* Requires PHP: 7.4
-* Stable tag: trunk
+
+Contributors: huskyr, timotijhof, dyepezg
+Donate link: https://donate.wikimedia.org
+Tags: photos, media, insert, embed, wikimedia, wikipedia
+Requires at least: 6.0
+Tested up to: 6.9
+Requires PHP: 7.4
+Stable tag: 0.4.0
+License: GPLv2 or later
+License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
 Search, Find and Insert images directly from Wikimedia Commons into your WordPress site.
 
@@ -20,6 +23,4 @@ Search, Find and Insert images directly from Wikimedia Commons into your WordPre
 
 You can also use the shortcode directly:
 
-`
 [photocommons file="Example.jpg" width="300" align="right"]
-`
