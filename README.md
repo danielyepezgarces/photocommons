@@ -1,5 +1,3 @@
-[![Build Status](https://travis-ci.com/hay/photocommons.svg?branch=master)](https://travis-ci.com/hay/photocommons)
-
 This version is based on the original PhotoCommons project: https://github.com/hay/photocommons
 
 # PhotoCommons
