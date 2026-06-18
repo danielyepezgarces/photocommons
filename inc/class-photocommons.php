@@ -26,7 +26,7 @@ class PhotoCommons {
 	const FILEPATH_PATTERN = 'https://commons.wikimedia.org/w/index.php?title=Special:FilePath&file=%s&width=%s';
 	const FILEPAGE_PATTERN = 'https://commons.wikimedia.org/w/index.php?title=File:%s';
 	const FEATURED_META_KEY = '_photocommons_featured_file';
-	const VERSION = '0.4.1';
+	const VERSION = '0.4.2';
 
 	/**
 	 * Absolute path to the main plugin file.
