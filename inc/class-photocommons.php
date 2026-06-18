@@ -26,7 +26,7 @@ class PhotoCommons {
 	const FILEPATH_PATTERN = 'https://commons.wikimedia.org/w/index.php?title=Special:FilePath&file=%s&width=%s';
 	const FILEPAGE_PATTERN = 'https://commons.wikimedia.org/w/index.php?title=File:%s';
 	const FEATURED_META_KEY = '_photocommons_featured_file';
-	const VERSION = '0.4.0-alpha';
+	const VERSION = '0.4.1';
 
 	/**
 	 * Absolute path to the main plugin file.
@@ -360,7 +360,7 @@ class PhotoCommons {
 	private function enqueue_scripts() {
 		wp_register_script(
 			'photocommons-suggestions',
-			plugins_url( 'js/jquery.suggestions.js', $this->pluginFile ),
+			plugins_url( 'js/photocommons-suggestions.js', $this->pluginFile ),
 			array( 'jquery' ),
 			self::VERSION,
 			true
@@ -405,7 +405,7 @@ class PhotoCommons {
 
 		wp_register_style(
 			'photocommons-suggestions',
-			plugins_url( 'css/jquery.suggestions.css', $this->pluginFile ),
+			plugins_url( 'css/photocommons-suggestions.css', $this->pluginFile ),
 			array(),
 			self::VERSION
 		);
