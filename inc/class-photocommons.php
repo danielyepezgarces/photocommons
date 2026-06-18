@@ -307,7 +307,7 @@ class PhotoCommons {
 		);
 		$attachment_id = media_handle_sideload( $file_array, $post_id, $filename );
 		if ( is_wp_error( $attachment_id ) ) {
-			@unlink( $tmp );
+			wp_delete_file( $tmp );
 			return 0;
 		}
 
@@ -324,8 +324,8 @@ class PhotoCommons {
 				'post_status' => 'inherit',
 				'posts_per_page' => 1,
 				'fields' => 'ids',
-				'meta_key' => '_photocommons_source_file',
-				'meta_value' => $filename,
+				'meta_key' => '_photocommons_source_file', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+				'meta_value' => $filename, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
 			)
 		);
 
