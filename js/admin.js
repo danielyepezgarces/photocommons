@@ -30,7 +30,7 @@
 	 * @return {string} Message text
 	 */
 	function msg(key) {
-		var raw = WP_PHOTOCOMMONS.translations[key];
+		var raw = PHOTOCOMMONS.translations[key];
 		if (!raw) {
 			throw new Error('Unknown message key: ' + key);
 		}
@@ -52,7 +52,7 @@
 				'<p><label><input type="checkbox" id="wp-photocommons-featured" /> ',
 				msgEsc('Use as featured image instead of inserting in post content'),
 				'</label></p>',
-				'<img src="' + escHtml(WP_PHOTOCOMMONS.imgLoaderUrl) + '" style="display:none;" id="wp-photocommons-loading" alt="" />',
+				'<img src="' + escHtml(PHOTOCOMMONS.imgLoaderUrl) + '" style="display:none;" id="wp-photocommons-loading" alt="" />',
 				'<div id="wp-photocommons-images"></div>'
 			))
 			.appendTo('body');

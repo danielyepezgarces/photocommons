@@ -98,7 +98,7 @@ var PhotoCommons = {
                         $.getJSON( url, function( data ) {
 
                             if ( !data.query || !data.query.pageids || !data.query.pageids.length ) {
-                                $( '#wp-photocommons-images' ).text( WP_PHOTOCOMMONS.translations['No images found.'] );
+                                $( '#wp-photocommons-images' ).text( PHOTOCOMMONS.translations['No images found.'] );
                             } else {
                                 $.each( data.query.pageids, function( key, pageid ) {
                                     var img = data.query.pages[pageid],
