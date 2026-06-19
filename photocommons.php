@@ -2,9 +2,9 @@
 /*
 Plugin Name: PhotoCommons
 Plugin URI: https://github.com/danielyepezgarces/photocommons
-Description: Search and add free images from Wikimedia Commons directly in your blog
+Description: Search and add free images from Wikimedia Commons directly in your blog. Unofficial plugin developed by volunteers.
 Author: Hay Kranen, Timo Tijhof, Daniel Yepez Garces
-Version: 0.4.2
+Version: 0.4.6
 Author URI: https://www.mediawiki.org/wiki/PhotoCommons
 License: GPL2
 Requires at least: 6.0

@@ -1,6 +1,7 @@
 (function(blocks, blockEditor, components, data, element, i18n, apiFetch) {
 	var el = element.createElement;
 	var __ = i18n.__;
+	var sprintf = i18n.sprintf;
 	var BlockControls = blockEditor.BlockControls;
 	var AlignmentToolbar = blockEditor.BlockAlignmentToolbar || blockEditor.AlignmentToolbar;
 	var InspectorControls = blockEditor.InspectorControls;
@@ -56,7 +57,7 @@
 
 	function updateFeaturedMeta(file) {
 		var editor = data.dispatch('core/editor');
-		var metaKey = WP_PHOTOCOMMONS_BLOCK.featuredMetaKey;
+		var metaKey = PHOTOCOMMONS_BLOCK.featuredMetaKey;
 		var meta = {};
 
 		meta[metaKey] = file || '';
@@ -89,6 +90,18 @@
 			useAsFeatured: {
 				type: 'boolean',
 				default: false
+			},
+			author: {
+				type: 'string',
+				default: ''
+			},
+			license: {
+				type: 'string',
+				default: ''
+			},
+			licenseUrl: {
+				type: 'string',
+				default: ''
 			}
 		},
 		edit: function(props) {
@@ -155,11 +168,7 @@
 				updateFeaturedMeta(value ? attributes.file : '');
 			}
 
-			function selectCurrentBlock(event) {
-				if (event) {
-					event.preventDefault();
-				}
-
+			function selectCurrentBlock() {
 				data.dispatch('core/block-editor').selectBlock(clientId);
 			}
 
@@ -274,7 +283,15 @@
 							{
 								key: result.id,
 								onClick: function() {
-									setFile(result.filename);
+									setAttributes({
+										file: result.filename,
+										author: result.author || '',
+										license: result.license || '',
+										licenseUrl: result.licenseUrl || ''
+									});
+									if (attributes.useAsFeatured) {
+										updateFeaturedMeta(result.filename);
+									}
 									setIsModalOpen(false);
 								},
 								style: {
@@ -609,8 +626,6 @@
 					'figure',
 					{
 						className: getAlignmentClass(attributes.align),
-						onClick: selectCurrentBlock,
-						onMouseDown: selectCurrentBlock,
 						style: getFigureStyle(attributes.align)
 					},
 					el('img', {
@@ -623,6 +638,41 @@
 							width: attributes.width ? attributes.width + 'px' : undefined
 						}
 					}),
+					(attributes.author || attributes.license) && el(
+						'figcaption',
+						{
+							className: 'wp-element-caption',
+							style: {
+								fontSize: '13px',
+								color: '#555',
+								marginTop: '4px'
+							},
+							dangerouslySetInnerHTML: {
+								__html: (function() {
+									var captionParts = [];
+									if (attributes.author) {
+										captionParts.push(sprintf(__('Photo by %s', 'photocommons'), attributes.author));
+									} else {
+										captionParts.push(__('Photo via Wikimedia Commons', 'photocommons'));
+									}
+
+									if (attributes.license) {
+										var licenseText = attributes.license;
+										if (/^cc-by/i.test(licenseText)) {
+											licenseText = licenseText.toUpperCase();
+										}
+										var licenseHtml = licenseText;
+										if (attributes.licenseUrl) {
+											licenseHtml = '<a href="' + attributes.licenseUrl + '" target="_blank" rel="noopener noreferrer">' + licenseText + '</a>';
+										}
+										captionParts.push(sprintf(__('License: %s', 'photocommons'), licenseHtml));
+									}
+
+									return captionParts.join('. ') + '.';
+								})()
+							}
+						}
+					),
 					isSelected && resizeHandle('left'),
 					isSelected && resizeHandle('right')
 				)

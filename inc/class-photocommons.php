@@ -26,7 +26,7 @@ class PhotoCommons {
 	const FILEPATH_PATTERN = 'https://commons.wikimedia.org/w/index.php?title=Special:FilePath&file=%s&width=%s';
 	const FILEPAGE_PATTERN = 'https://commons.wikimedia.org/w/index.php?title=File:%s';
 	const FEATURED_META_KEY = '_photocommons_featured_file';
-	const VERSION = '0.4.2';
+	const VERSION = '0.4.6';
 
 	/**
 	 * Absolute path to the main plugin file.
@@ -45,6 +45,7 @@ class PhotoCommons {
 		add_action( 'rest_api_init', array( $this, 'register_rest_routes' ) );
 		add_action( 'save_post', array( $this, 'maybe_set_featured_image' ), 20, 2 );
 		add_shortcode( 'photocommons', array( $this, 'add_shortcode' ) );
+		add_filter( 'http_request_args', array( $this, 'filter_http_request_args' ), 10, 2 );
 
 		if ( is_admin() ) {
 			$this->init_admin();
@@ -77,7 +78,7 @@ class PhotoCommons {
 
 		wp_localize_script(
 			'photocommons-block',
-			'WP_PHOTOCOMMONS_BLOCK',
+			'PHOTOCOMMONS_BLOCK',
 			array(
 				'featuredMetaKey' => self::FEATURED_META_KEY,
 			)
@@ -105,6 +106,18 @@ class PhotoCommons {
 					'useAsFeatured' => array(
 						'type' => 'boolean',
 						'default' => false,
+					),
+					'author' => array(
+						'type' => 'string',
+						'default' => '',
+					),
+					'license' => array(
+						'type' => 'string',
+						'default' => '',
+					),
+					'licenseUrl' => array(
+						'type' => 'string',
+						'default' => '',
 					),
 				),
 			)
@@ -146,6 +159,9 @@ class PhotoCommons {
 				'file' => '',
 				'width' => 300,
 				'align' => 'right',
+				'author' => '',
+				'license' => '',
+				'licenseurl' => '',
 			),
 			(array) $args,
 			'photocommons'
@@ -161,6 +177,53 @@ class PhotoCommons {
 		$align = $this->get_alignment_class( is_scalar( $args['align'] ) ? $args['align'] : 'right' );
 		$thumb = $this->get_thumb_url( $filename, $width );
 		$filepage = $this->get_page_url( $filename );
+
+		$caption = '';
+		if ( ! empty( $args['author'] ) || ! empty( $args['license'] ) ) {
+			$caption_parts = array();
+			if ( ! empty( $args['author'] ) ) {
+				$author_html = wp_kses_post( $args['author'] );
+				$caption_parts[] = sprintf( __( 'Photo by %s', 'photocommons' ), $author_html );
+			} else {
+				$caption_parts[] = __( 'Photo via Wikimedia Commons', 'photocommons' );
+			}
+
+			if ( ! empty( $args['license'] ) ) {
+				$license_text = esc_html( $args['license'] );
+				if ( preg_match( '/^cc-by/i', $license_text ) ) {
+					$license_text = strtoupper( $license_text );
+				}
+
+				if ( ! empty( $args['licenseurl'] ) ) {
+					$license_html = sprintf( '<a href="%s" target="_blank" rel="noopener noreferrer">%s</a>', esc_url( $args['licenseurl'] ), $license_text );
+				} else {
+					$license_html = $license_text;
+				}
+				$caption_parts[] = sprintf( __( 'License: %s', 'photocommons' ), $license_html );
+			}
+
+			$caption = implode( '. ', $caption_parts ) . '.';
+		}
+
+		if ( ! empty( $caption ) ) {
+			return sprintf(
+				'<figure class="wp-block-image align%s wp-photocommons-figure" style="width: %spx; max-width: 100%%;">' .
+				'<a href="%s" title="%s" class="wp-photocommons-thumb">' .
+				'<img src="%s" title="%s via Wikimedia Commons" alt="%s" width="%s" />' .
+				'</a>' .
+				'<figcaption class="wp-element-caption">%s</figcaption>' .
+				'</figure>',
+				esc_attr( $align ),
+				esc_attr( (string) $width ),
+				esc_url( $filepage ),
+				esc_attr( $filename ),
+				esc_url( $thumb ),
+				esc_attr( $filename ),
+				esc_attr( $filename ),
+				esc_attr( (string) $width ),
+				$caption
+			);
+		}
 
 		return sprintf(
 			'<a href="%s" title="%s" class="wp-photocommons-thumb">' .
@@ -210,7 +273,8 @@ class PhotoCommons {
 					'gsrlimit' => $per_page,
 					'gsroffset' => ( $page - 1 ) * $per_page,
 					'prop' => 'imageinfo',
-					'iiprop' => 'url',
+					'iiprop' => 'url|extmetadata',
+					'iiextmetadatafilter' => 'Artist|LicenseShortName|LicenseUrl',
 					'iiurlwidth' => 180,
 				),
 				'https://commons.wikimedia.org/w/api.php'
@@ -234,12 +298,20 @@ class PhotoCommons {
 			}
 
 			$filename = preg_replace( '/^File:/', '', $page_data['title'] );
+			$extmetadata = ! empty( $page_data['imageinfo'][0]['extmetadata'] ) ? $page_data['imageinfo'][0]['extmetadata'] : array();
+			$author = ! empty( $extmetadata['Artist']['value'] ) ? $extmetadata['Artist']['value'] : '';
+			$license = ! empty( $extmetadata['LicenseShortName']['value'] ) ? $extmetadata['LicenseShortName']['value'] : '';
+			$license_url = ! empty( $extmetadata['LicenseUrl']['value'] ) ? $extmetadata['LicenseUrl']['value'] : '';
+
 			$results[] = array(
 				'id' => absint( $page_data['pageid'] ),
 				'title' => sanitize_text_field( $page_data['title'] ),
 				'filename' => sanitize_text_field( $filename ),
 				'thumbUrl' => esc_url_raw( $page_data['imageinfo'][0]['thumburl'] ),
 				'url' => empty( $page_data['imageinfo'][0]['url'] ) ? '' : esc_url_raw( $page_data['imageinfo'][0]['url'] ),
+				'author' => wp_kses_post( $author ),
+				'license' => sanitize_text_field( $license ),
+				'licenseUrl' => esc_url_raw( $license_url ),
 			);
 		}
 
@@ -382,7 +454,7 @@ class PhotoCommons {
 
 		wp_localize_script(
 			'photocommons-admin',
-			'WP_PHOTOCOMMONS',
+			'PHOTOCOMMONS',
 			array(
 				'imgLoaderUrl' => plugins_url( 'img/loading.gif', $this->pluginFile ),
 				'translations' => array(
@@ -433,5 +505,19 @@ class PhotoCommons {
 
 	private function is_editor_screen( $hook_suffix ) {
 		return in_array( $hook_suffix, array( 'post.php', 'post-new.php' ), true );
+	}
+
+	/**
+	 * Filter HTTP request arguments to add a custom User-Agent for Wikimedia requests.
+	 *
+	 * @param array  $parsed_args Request arguments.
+	 * @param string $url         Request URL.
+	 * @return array
+	 */
+	public function filter_http_request_args( $parsed_args, $url ) {
+		if ( strpos( $url, 'wikimedia.org' ) !== false || strpos( $url, 'wikipedia.org' ) !== false ) {
+			$parsed_args['headers']['User-Agent'] = 'PhotoCommons/' . self::VERSION . ' (https://github.com/danielyepezgarces/photocommons; git@dyepezg.dev)';
+		}
+		return $parsed_args;
 	}
 }
